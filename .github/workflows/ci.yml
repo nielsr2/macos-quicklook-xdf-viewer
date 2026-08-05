@@ -9,6 +9,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Needed for the release step to create a GitHub Release and upload assets.
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build, test & package
@@ -57,3 +61,16 @@ jobs:
           name: XdfViewer-app
           path: XdfViewer.zip
           if-no-files-found: error
+
+      # On a version tag (e.g. v1.0.0), publish the built app to a GitHub Release.
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mv XdfViewer.zip "XdfViewer-${GITHUB_REF_NAME}.zip"
+          gh release create "$GITHUB_REF_NAME" "XdfViewer-${GITHUB_REF_NAME}.zip" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            --verify-tag \
+            || gh release upload "$GITHUB_REF_NAME" "XdfViewer-${GITHUB_REF_NAME}.zip" --clobber
