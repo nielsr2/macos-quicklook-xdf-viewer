@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  XdfViewer app icon — master artwork.
+  Motif: stacked multi-channel biosignal waveforms on a light "card".
+  Rasterize with design/generate-appicon.sh (rsvg-convert).
+  Canvas 1024x1024. macOS squircle with padding + soft shadow on transparent bg.
+-->
+<svg width="1024" height="1024" viewBox="0 0 1024 1024"
+     xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Faint top-to-bottom card gradient -->
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#ffffff"/>
+      <stop offset="1"   stop-color="#eef1f5"/>
+    </linearGradient>
+
+    <!-- Soft drop shadow for the card -->
+    <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="26"
+                    flood-color="#0b1220" flood-opacity="0.22"/>
+    </filter>
+
+    <!-- Continuous-corner (superellipse-ish) card path.
+         Padding ~9% -> card occupies x/y from 92 to 932 (840x840). -->
+    <clipPath id="cardClip">
+      <path d="M 92 372
+               C 92 165, 165 92, 372 92
+               L 652 92
+               C 859 92, 932 165, 932 372
+               L 932 652
+               C 932 859, 859 932, 652 932
+               L 372 932
+               C 165 932, 92 859, 92 652
+               Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Card -->
+  <g filter="url(#cardShadow)">
+    <path d="M 92 372
+             C 92 165, 165 92, 372 92
+             L 652 92
+             C 859 92, 932 165, 932 372
+             L 932 652
+             C 932 859, 859 932, 652 932
+             L 372 932
+             C 165 932, 92 859, 92 652
+             Z"
+          fill="url(#card)"/>
+  </g>
+
+  <!-- Waveform traces, clipped to the card.
+       Four evenly-stacked bands, baselines at y = 300, 470, 640, 810.
+       Left/right inset ~150 -> 190..834. Rounded caps/joins. -->
+  <g clip-path="url(#cardClip)" fill="none"
+     stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- 1. cyan — smooth sine (EEG-ish), baseline 300 -->
+    <path stroke="#00b4d8" stroke-width="34"
+          d="M 190 300
+             C 251 190, 312 190, 373 300
+             C 434 410, 495 410, 556 300
+             C 617 190, 678 190, 739 300
+             C 780 373, 810 373, 834 320"/>
+
+    <!-- 2. green — dense EMG-style burst, baseline 470 -->
+    <path stroke="#2fbf5f" stroke-width="30"
+          d="M 190 470
+             L 236 470
+             L 268 398 L 300 542 L 332 430 L 364 516
+             L 396 372 L 428 568 L 460 452 L 492 500
+             L 524 408 L 556 470
+             L 620 470
+             L 652 432 L 684 508 L 716 470
+             L 834 470"/>
+
+    <!-- 3. amber — envelope bars / stepped sparkline, baseline 640 -->
+    <path stroke="#f4a521" stroke-width="30"
+          d="M 190 640
+             L 262 640 L 262 560 L 334 560 L 334 700
+             L 406 700 L 406 596 L 478 596 L 478 668
+             L 550 668 L 550 540 L 622 540 L 622 660
+             L 694 660 L 694 600 L 766 600 L 766 640 L 834 640"/>
+
+    <!-- 4. pink — marker / pulse spikes, baseline 810 -->
+    <path stroke="#f0508a" stroke-width="30"
+          d="M 190 810
+             L 300 810 L 330 810 L 356 690 L 382 810 L 412 810
+             L 512 810 L 542 810 L 568 690 L 594 810 L 624 810
+             L 724 810 L 754 810 L 780 690 L 806 810 L 834 810"/>
+  </g>
+</svg>

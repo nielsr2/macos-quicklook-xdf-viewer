@@ -1,5 +1,13 @@
 # XdfViewer — a Quick Look extension for macOS
 
+[![CI](https://github.com/nielsr2/macos-quicklook-xdf-viewer/actions/workflows/ci.yml/badge.svg)](https://github.com/nielsr2/macos-quicklook-xdf-viewer/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+<!-- Add a preview screenshot or GIF here — it makes a Quick Look tool much
+     easier to grasp at a glance, e.g.:
+![XdfViewer previewing an .xdf recording](docs/screenshot.png)
+-->
+
 A macOS **Quick Look** (press **Space** in Finder) preview + thumbnail extension
 for **`.xdf`** files — the [Extensible Data Format](https://github.com/sccn/xdf)
 used by [Lab Streaming Layer](https://labstreaminglayer.readthedocs.io/) (LSL)
@@ -10,7 +18,7 @@ and free-form event/marker streams — each with its own channel count, sample
 format, and (often irregular) sample rate.
 
 It ships as a host app (`XdfViewer.app`) embedding its own preview + thumbnail
-extensions, built from `project.yml` via [XcodeGen](https://github.com/yonyz/XcodeGen).
+extensions, built from `project.yml` via [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
 ## What the preview shows
 
@@ -90,7 +98,7 @@ launched, enabled XdfViewer should win cleanly.
 
 ## Build & install
 
-Requires Xcode 26+ and [XcodeGen](https://github.com/yonyz/XcodeGen)
+Requires Xcode 26+ and [XcodeGen](https://github.com/yonaskolb/XcodeGen)
 (`brew install xcodegen`). The `.xcodeproj` (`XdfViewer.xcodeproj`) is generated
 from `project.yml` and is git-ignored.
 
@@ -135,3 +143,7 @@ Developer ID identity + hardened runtime and notarize the app.
 The parsing/decimation/rendering core has no UI dependencies, so it can be
 exercised in isolation (decode → envelope/waveform → metadata) — the fastest
 way to iterate on the renderer without going through Quick Look.
+
+## License
+
+Released under the [MIT License](LICENSE) © 2026 Niels Erik Raursø.

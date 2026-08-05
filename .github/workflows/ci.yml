@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build, test & package
+    # macos-15 ships Xcode 26.x, matching the project's "Xcode 26+" requirement.
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: brew install xcodegen xcbeautify
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Run unit tests
+        run: |
+          xcodebuild test \
+            -project XdfViewer.xcodeproj \
+            -scheme XdfViewerCoreTests \
+            -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcbeautify --renderer github-actions || exit ${PIPESTATUS[0]}
+
+      - name: Build app (Release, ad-hoc signed)
+        run: |
+          xcodebuild build \
+            -project XdfViewer.xcodeproj \
+            -scheme XdfViewer \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            -derivedDataPath ./build \
+            | xcbeautify --renderer github-actions || exit ${PIPESTATUS[0]}
+
+      - name: Package app
+        run: |
+          APP="build/Build/Products/Release/XdfViewer.app"
+          test -d "$APP" || { echo "::error::Built app not found at $APP"; exit 1; }
+          test -f "$APP/Contents/Resources/AppIcon.icns" || echo "::warning::AppIcon.icns missing from bundle"
+          ditto -c -k --keepParent "$APP" XdfViewer.zip
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: XdfViewer-app
+          path: XdfViewer.zip
+          if-no-files-found: error
