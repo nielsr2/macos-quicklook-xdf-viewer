@@ -452,11 +452,12 @@ public struct FullWaveformView: View {
         let d = duration
         // Mirrors AudioViewerModel's targetColumns shape (~120 columns/sec,
         // clamped to a sane range) rather than inventing new constants.
-        let columns = min(8000, max(600, Int(d * 120)))
+        let columns = XdfEnvelopeReader.envelopeColumns(duration: d, perSecond: 120,
+                                                        min: 600, max: 8000)
 
         let envelopes = await envelopeCache.envelopes(streamID: streamInfo.streamID, columns: columns) {
             let chunks = doc.chunks(forStream: streamInfo.streamID)
-            let totalSampleCount = streamInfo.sampleCount ?? chunks.reduce(0) { $0 + $1.declaredSampleCount }
+            let totalSampleCount = streamInfo.sampleCount ?? chunks.totalDeclaredSampleCount
             return XdfEnvelopeReader.readEnvelopes(url: url,
                                                     chunks: chunks,
                                                     channelCount: streamInfo.channelCount,

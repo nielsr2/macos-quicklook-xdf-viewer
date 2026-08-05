@@ -78,9 +78,15 @@ enum XdfSampleDecoder {
                 }
                 for c in 0..<channelCount {
                     // Strings are var-length-prefixed using the same 1/4/8-byte
-                    // width scheme as chunk lengths and sample counts.
+                    // width scheme as chunk lengths and sample counts. A length
+                    // > Int.max (or past EOF) would trap `Int(length)` /
+                    // `readUTF8`; throw instead so the marker reader degrades to
+                    // an empty list rather than crashing the extension.
                     let length = try reader.readVarLength()
-                    scratch[c] = try reader.readUTF8(count: Int(length))
+                    guard let count = Int(exactly: length), count <= reader.remaining else {
+                        throw XdfError.truncated
+                    }
+                    scratch[c] = try reader.readUTF8(count: count)
                 }
                 onSample(timestamp, scratch)
                 decoded += 1

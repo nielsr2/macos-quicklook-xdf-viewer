@@ -139,7 +139,8 @@ public struct SoloChannelView: View {
     /// columns" guidance) so a very long recording still decodes in a
     /// bounded, one-shot pass rather than becoming unbounded.
     private var columnBudget: Int {
-        min(30_000, max(2_000, Int(duration * 400)))
+        XdfEnvelopeReader.envelopeColumns(duration: duration, perSecond: 400,
+                                          min: 2_000, max: 30_000)
     }
 
     public var body: some View {
@@ -473,7 +474,7 @@ public struct SoloChannelView: View {
         let url = fileURL
         let all = await envelopeCache.envelopes(streamID: streamInfo.streamID, columns: columns) {
             let chunks = doc.chunks(forStream: streamInfo.streamID)
-            let totalSampleCount = streamInfo.sampleCount ?? chunks.reduce(0) { $0 + $1.declaredSampleCount }
+            let totalSampleCount = streamInfo.sampleCount ?? chunks.totalDeclaredSampleCount
             return XdfEnvelopeReader.readEnvelopes(url: url,
                                                     chunks: chunks,
                                                     channelCount: streamInfo.channelCount,

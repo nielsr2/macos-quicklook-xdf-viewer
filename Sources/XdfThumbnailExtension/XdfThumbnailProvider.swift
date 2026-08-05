@@ -53,7 +53,7 @@ final class XdfThumbnailProvider: QLThumbnailProvider {
         let columns = max(8, Int(size.width))
         let envelopes: [XdfChannelEnvelope] = chosenStreams.map { stream in
             let chunks = document.chunks(forStream: stream.streamID)
-            let totalSampleCount = stream.sampleCount ?? chunks.reduce(0) { $0 + $1.declaredSampleCount }
+            let totalSampleCount = stream.sampleCount ?? chunks.totalDeclaredSampleCount
             let streamEnvelopes = XdfEnvelopeReader.readEnvelopes(url: request.fileURL,
                                                                    chunks: chunks,
                                                                    channelCount: stream.channelCount,

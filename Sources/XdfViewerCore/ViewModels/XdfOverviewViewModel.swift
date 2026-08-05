@@ -151,7 +151,7 @@ public final class XdfOverviewViewModel: ObservableObject {
             let chunks = doc.chunks(forStream: streamID)
             let channelCount = stream.channelCount
             let channelFormat = stream.channelFormat
-            let totalSampleCount = stream.sampleCount ?? chunks.reduce(0) { $0 + $1.declaredSampleCount }
+            let totalSampleCount = stream.sampleCount ?? chunks.totalDeclaredSampleCount
 
             Task.detached(priority: .utility) { [weak self] in
                 let envelopes = XdfEnvelopeReader.readEnvelopes(url: url,
@@ -214,12 +214,13 @@ public final class XdfOverviewViewModel: ObservableObject {
         let chunks = doc.chunks(forStream: streamID)
         let channelCount = stream.channelCount
         let channelFormat = stream.channelFormat
-        let totalSampleCount = stream.sampleCount ?? chunks.reduce(0) { $0 + $1.declaredSampleCount }
+        let totalSampleCount = stream.sampleCount ?? chunks.totalDeclaredSampleCount
         // Mirrors FullWaveformView.loadEnvelopes' targetColumns shape (a
         // per-second column density clamped to a sane range) rather than
         // inventing unrelated constants — the inline detail plot renders
         // smaller than the full waveform view, so a lower ceiling suffices.
-        let columns = min(2000, max(600, Int((stream.duration ?? 0) * 40)))
+        let columns = XdfEnvelopeReader.envelopeColumns(duration: stream.duration ?? 0,
+                                                        perSecond: 40, min: 600, max: 2000)
 
         Task.detached(priority: .userInitiated) { [weak self] in
             let envelopes = XdfEnvelopeReader.readEnvelopes(url: url,

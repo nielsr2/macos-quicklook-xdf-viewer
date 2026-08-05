@@ -88,7 +88,9 @@ enum XdfHeaderXMLParser {
             switch elementName {
             case "name": fields.name = text
             case "type": fields.type = text
-            case "channel_count": fields.channelCount = Int(text) ?? 0
+            // Clamp to >= 0: a malformed negative count would trap every
+            // downstream `0..<channelCount` (StreamCardViewModel, readEnvelopes).
+            case "channel_count": fields.channelCount = max(0, Int(text) ?? 0)
             case "nominal_srate": fields.nominalSampleRate = Double(text) ?? 0
             case "channel_format": fields.channelFormat = XdfSampleFormat(xmlValue: text) ?? .float32
             case "first_timestamp": fields.firstTimestamp = Double(text)

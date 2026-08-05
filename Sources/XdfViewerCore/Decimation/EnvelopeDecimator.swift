@@ -60,6 +60,23 @@ public enum XdfEnvelopeReader {
     /// case, which is the actual budget that matters for a preview extension.
     public static let defaultMaxSamplesToScan = 5_000_000
 
+    /// Column budget for a decimation pass: `perSecond` columns per second of
+    /// `duration`, clamped to `lo...hi`. The clamp happens in floating point
+    /// *before* the `Int` conversion, so an absurd or non-finite `duration`
+    /// from a malformed footer (e.g. `last_timestamp = 1e17`) can't trap
+    /// `Int(_:)` — which aborts for NaN/±Inf or any value ≥ 2^63. A non-finite
+    /// or non-positive duration falls back to `lo`.
+    public static func envelopeColumns(duration: Double, perSecond: Double,
+                                        min lo: Int, max hi: Int) -> Int {
+        let lo = Swift.max(1, lo)
+        let hi = Swift.max(lo, hi)
+        guard duration.isFinite, perSecond.isFinite, duration > 0, perSecond > 0 else { return lo }
+        let raw = (duration * perSecond).rounded()
+        if raw <= Double(lo) { return lo }
+        if raw >= Double(hi) { return hi }   // hi is a sane Int, so this Int() is safe
+        return Int(raw)
+    }
+
     /// - Parameters:
     ///   - chunks: this stream's `Samples` chunk index entries, from
     ///     `XdfDocument.chunks(forStream:)`.
@@ -115,6 +132,14 @@ public enum XdfEnvelopeReader {
                 let col = min(columns - 1, Int(Double(sampleIndex) / perColumn))
                 for c in 0..<channelCount {
                     let v = Float(values[c])
+                    // Skip non-finite samples (NaN/±Inf — common in real EEG/EMG
+                    // recordings on electrode dropout / LSL gaps). Letting one
+                    // leak in makes dataMax/dataMin non-finite, which turns every
+                    // drawn coordinate for the lane into NaN. Not marking the
+                    // column `touched` lets the untouched→0 reset below clear a
+                    // column that had only non-finite samples, instead of leaving
+                    // its ±greatestFiniteMagnitude sentinels.
+                    guard v.isFinite else { continue }
                     if v < mins[c][col] { mins[c][col] = v }
                     if v > maxs[c][col] { maxs[c][col] = v }
                     touched[c][col] = true
@@ -169,6 +194,20 @@ public enum XdfEnvelopeReader {
             scanned = first.declaredSampleCount
         }
         return (selected, max(scanned, 1))
+    }
+}
+
+public extension Array where Element == XdfChunkIndex {
+    /// Sum of every chunk's `declaredSampleCount`, saturating at `Int.max`
+    /// instead of trapping on overflow. Declared counts come straight from the
+    /// file (each is only individually clamped to `Int.max` at index time), so
+    /// two pathological chunks can overflow a plain `+`. Used as the fallback
+    /// total when a stream footer carries no `sample_count`.
+    var totalDeclaredSampleCount: Int {
+        reduce(0) { acc, chunk in
+            let (sum, overflowed) = acc.addingReportingOverflow(chunk.declaredSampleCount)
+            return overflowed ? Int.max : sum
+        }
     }
 }
 

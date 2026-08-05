@@ -45,7 +45,10 @@ public enum XdfReader {
             let length = try reader.readVarLength()
             guard length >= 2 else { throw XdfError.truncated }
             let tagRaw = try reader.readUInt16()
-            let contentLength = Int(length) - 2
+            // A declared length > Int.max would trap `Int(length)`; a corrupt
+            // file must throw, not crash the preview/thumbnail extension.
+            guard let lengthInt = Int(exactly: length) else { throw XdfError.truncated }
+            let contentLength = lengthInt - 2
             guard contentLength >= 0, reader.remaining >= contentLength else { throw XdfError.truncated }
             let contentStart = reader.offset
             let contentEnd = contentStart + contentLength

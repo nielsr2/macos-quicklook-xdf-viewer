@@ -94,7 +94,8 @@ public struct StreamCardViewModel: Identifiable, Sendable, Equatable {
     static func formatSampleRate(_ rate: Double) -> String {
         guard rate > 0, rate.isFinite else { return "Irregular rate" }
         if rate.rounded() == rate {
-            return "\(Int(rate)) Hz"
+            // `%.0f` (not `Int(rate)`) so an absurd but integral rate can't trap.
+            return String(format: "%.0f Hz", rate)
         }
         return String(format: "%.2f Hz", rate)
     }
@@ -103,14 +104,16 @@ public struct StreamCardViewModel: Identifiable, Sendable, Equatable {
     /// when the footer (and thus duration) is unavailable.
     static func formatDuration(_ duration: Double?) -> String {
         guard let duration, duration.isFinite, duration >= 0 else { return "Unknown duration" }
-        let totalSeconds = Int(duration.rounded())
+        let totalSeconds = safeInt(duration.rounded())
         let hours = totalSeconds / 3600
         let minutes = (totalSeconds % 3600) / 60
         let seconds = totalSeconds % 60
         if hours > 0 {
-            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
+            // `%ld` (not `%d`) so a large hours value isn't truncated to 32 bits
+            // and rendered negative.
+            return String(format: "%ld:%02ld:%02ld", hours, minutes, seconds)
         }
-        return String(format: "%d:%02d", minutes, seconds)
+        return String(format: "%ld:%02ld", minutes, seconds)
     }
 
     /// Pure, case-insensitive substring filter over a stream's channels by
@@ -142,13 +145,13 @@ public struct StreamCardViewModel: Identifiable, Sendable, Equatable {
     /// view and is out of scope here).
     static func formatEventTime(_ seconds: Double) -> String {
         guard seconds.isFinite else { return "0:00" }
-        let totalSeconds = Int(max(0, seconds).rounded())
+        let totalSeconds = safeInt(max(0, seconds).rounded())
         let hours = totalSeconds / 3600
         let minutes = (totalSeconds % 3600) / 60
         let secs = totalSeconds % 60
         if hours > 0 {
-            return String(format: "%d:%02d:%02d", hours, minutes, secs)
+            return String(format: "%ld:%02ld:%02ld", hours, minutes, secs)
         }
-        return String(format: "%d:%02d", minutes, secs)
+        return String(format: "%ld:%02ld", minutes, secs)
     }
 }
