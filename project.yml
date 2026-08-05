@@ -1,0 +1,112 @@
+name: XdfViewer
+options:
+  bundleIdPrefix: com.nielsr2
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+  defaultConfig: Release
+
+settings:
+  base:
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    # Local / personal-use signing: ad-hoc, no team, no notarization.
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGNING_REQUIRED: "YES"
+    CODE_SIGNING_ALLOWED: "YES"
+    ENABLE_HARDENED_RUNTIME: "NO"
+    GENERATE_INFOPLIST_FILE: "NO"
+
+targets:
+
+  XdfViewerCore:
+    type: framework
+    platform: macOS
+    sources:
+      - path: Sources/XdfViewerCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nielsr2.XdfViewerCore
+        INFOPLIST_FILE: Sources/XdfViewerCore/Info.plist
+        DEFINES_MODULE: "YES"
+        SKIP_INSTALL: "YES"
+
+  XdfViewer:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/XdfHostApp
+    dependencies:
+      - target: XdfViewerCore
+        embed: true
+      - target: XdfPreviewExtension
+        embed: true
+      - target: XdfThumbnailExtension
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nielsr2.XdfViewer
+        PRODUCT_NAME: XdfViewer
+        INFOPLIST_FILE: Sources/XdfHostApp/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Sources/XdfHostApp/XdfHostApp.entitlements
+        ENABLE_APP_SANDBOX: "YES"
+
+  XdfPreviewExtension:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: Sources/XdfPreviewExtension
+    dependencies:
+      - target: XdfViewerCore
+        embed: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nielsr2.XdfViewer.Preview
+        PRODUCT_NAME: XdfPreviewExtension
+        INFOPLIST_FILE: Sources/XdfPreviewExtension/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Sources/XdfPreviewExtension/XdfPreviewExtension.entitlements
+        ENABLE_APP_SANDBOX: "YES"
+        SWIFT_OBJC_BRIDGING_HEADER: ""
+
+  XdfThumbnailExtension:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: Sources/XdfThumbnailExtension
+    dependencies:
+      - target: XdfViewerCore
+        embed: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nielsr2.XdfViewer.Thumbnail
+        PRODUCT_NAME: XdfThumbnailExtension
+        INFOPLIST_FILE: Sources/XdfThumbnailExtension/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Sources/XdfThumbnailExtension/XdfThumbnailExtension.entitlements
+        ENABLE_APP_SANDBOX: "YES"
+        SWIFT_OBJC_BRIDGING_HEADER: ""
+
+  XdfViewerCoreTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Sources/XdfViewerCoreTests
+    dependencies:
+      - target: XdfViewerCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nielsr2.XdfViewerCoreTests
+        GENERATE_INFOPLIST_FILE: "YES"
+
+schemes:
+  XdfViewerCoreTests:
+    build:
+      targets:
+        XdfViewerCore: all
+        XdfViewerCoreTests: [test]
+    test:
+      targets:
+        - XdfViewerCoreTests
+      gatherCoverageData: false

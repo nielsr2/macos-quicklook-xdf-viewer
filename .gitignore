@@ -1,0 +1,19 @@
+# Xcode / build
+build/
+DerivedData/
+*.xcodeproj/
+*.xcworkspace/
+!project.yml
+
+# macOS
+.DS_Store
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# User/xcode state
+xcuserdata/
+*.xcuserstate
+*.moved-aside
+.claude/
